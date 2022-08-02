@@ -26,27 +26,30 @@ class Handler(BaseHTTPRequestHandler):
   
   def generate_page(self, seed):
     """Generate a webpage containing only random links"""
-    
+
     html = '<html>\n<body>\n'
-    
+
     random.seed(seed)
     # number of links to put on a page
     num_pages = random.randint(*LINKS_PER_PAGE)
-    
+
     # check if a file was provided
     if self.webpages is None:
       # generate some random links
-      for i in range(num_pages):
-        address = ''.join([random.choice(CHAR_SPACE) for i in range(random.randint(*LENGTH_OF_LINKS))])
+      for _ in range(num_pages):
+        address = ''.join([
+            random.choice(CHAR_SPACE)
+            for _ in range(random.randint(*LENGTH_OF_LINKS))
+        ])
         html += '<a href="' + address + '">' + address + '</a><br>\n'
     else:
       # get links from the file contents
-      for i in range(num_pages):
+      for _ in range(num_pages):
         address = random.choice(self.webpages)
         html += '<a href="' + address + '">' + address + '</a><br>\n'
-      
+
     html += '</body>\n</html>'
-    
+
     return html
     
   def do_HEAD(self):
@@ -70,7 +73,7 @@ class Handler(BaseHTTPRequestHandler):
   
 
 def print_usage():
-  print('Usage: ' + sys.argv[0] + ' [FILE]\n')
+  print(f'Usage: {sys.argv[0]}' + ' [FILE]\n')
   print('FILE is file containing a list of webpage names to serve, one per line.  If no file is provided, random links will be generated.')
 
     
@@ -78,22 +81,19 @@ def main():
   if '-h' in sys.argv or '--help' in sys.argv:
     print_usage()
     exit()
-    
+
   # Use a file, if provided on command line
   if len(sys.argv) == 2:
     try:
-      # read in the file
-      f = open(sys.argv[1])
-      Handler.webpages = f.readlines()
-      f.close()
-      
+      with open(sys.argv[1]) as f:
+        Handler.webpages = f.readlines()
       # check for empty file
       if Handler.webpages == []:
         print('The file provided was empty.  Using randomly generated links.')
         Handler.webpages = None
     except IOError:
       print('Can\'t read input file.  Using randomly generated links.')
-    
+
   try:
     print('Starting server on port %d...' % PORT)
     server = HTTPServer(('', PORT), Handler)
